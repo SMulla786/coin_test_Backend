@@ -132,7 +132,16 @@ const sellController = async (req: Request, res: Response) => {
     }
     const totalamount = parseFloat((coins * coin.price.toNumber()).toFixed(2)); // Convert Decimal to number
     const amount = totalamount - totalamount * 0.1;
-
+    await prisma.wallet.update({
+      where: {
+        userId,
+      },
+      data: {
+        balance: {
+          decrement: coins,
+        },
+      },
+    })
     await prisma.sell.create({
       data: {
         coinId: coin.id,
@@ -274,7 +283,12 @@ const coinHistory = async (req: Request, res: Response) => {
         },
       },
     });
-    res.json({ coin });
+  const totalCoinSold= await prisma.wallet.aggregate({
+    _sum: {
+      balance: true,
+    },
+  })
+    res.json({ coin,totalCoinSold });
     return;
   } catch (error) {
     console.error(error);
